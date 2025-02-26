@@ -7,7 +7,11 @@ import connectDB from "./config/database.config";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { HTTPSTATUS } from "./config/http.config";
 import { asyncHandler } from "./middlewares/asyncHandler.middleware";
- 
+import "./config/passport.config" ;
+import passport from "passport";
+import authRotues from "./routes/auth.route";
+
+
 const app = express() ;
 const BASE_PATH = config.BASE_PATH ;
 
@@ -25,6 +29,9 @@ app.use(
     })
 ) ;
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(
     cors({
         origin: config.FRONTEND_ORIGIN,
@@ -38,6 +45,7 @@ app.get(`/`, asyncHandler( async(req: Request, res:Response, next:NextFunction)=
     })
 }))
 
+app.use(`${BASE_PATH}/auth`, authRotues);
 app.use(errorHandler) ;
 
 app.listen(config.PORT, async()=> {
