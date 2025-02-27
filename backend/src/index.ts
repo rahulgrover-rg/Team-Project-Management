@@ -10,6 +10,8 @@ import { asyncHandler } from "./middlewares/asyncHandler.middleware";
 import "./config/passport.config" ;
 import passport from "passport";
 import authRotues from "./routes/auth.route";
+import userRoutes from "./routes/user.route";
+import isAuthenticated from "./middlewares/isAuthenticated.middleware";
 
 
 const app = express() ;
@@ -46,6 +48,8 @@ app.get(`/`, asyncHandler( async(req: Request, res:Response, next:NextFunction)=
 }))
 
 app.use(`${BASE_PATH}/auth`, authRotues);
+app.use(`${BASE_PATH}/user`, isAuthenticated, userRoutes);
+
 app.use(errorHandler) ;
 
 app.listen(config.PORT, async()=> {
