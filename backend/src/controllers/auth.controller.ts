@@ -1,4 +1,5 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
+import passport from "passport";
 import { config } from "../config/app.config";
 import { HTTPSTATUS } from "../config/http.config";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
@@ -28,5 +29,55 @@ export const registerUserController = asyncHandler(
         return res.status(HTTPSTATUS.CREATED).json({
             message: "User created successfully."
         });
+    }
+)
+
+export const loginController = asyncHandler(
+    async(req: Request, res:Response, next:NextFunction) => {
+        passport.authenticate("local", ( 
+            err: Error | null, 
+            user:Express.User|false,
+            info: {message: string} | undefined
+            ) => {
+                if(err) {
+                    return next(err) ;
+                }
+
+                if(!user) {
+                    return res.status(HTTPSTATUS.UNAUTHORIZED).json({
+                        message: info?.message || "Invalid email or password"
+                    })
+                }
+
+                req.logIn(user, (err)=> {
+                    if(err) {
+                        return next(err) ;
+                    }
+
+                    return res.status(HTTPSTATUS.OK).json({
+                        message: "Logged in successfully",
+                        user,
+                    }) ;
+                });
+            }
+        )(req,res,next); 
+    }
+);
+
+export const logOutController = asyncHandler(
+    async(req:Request,res:Response) => {
+        req.logout((err) => {
+            if(err) {
+                console.log("logout error: ", err);
+                return res.status(HTTPSTATUS.INTERNAL_SERVER_ERROR).json({
+                    error: "Failed to log out"
+                });
+            }
+        });
+
+        req.session = null;
+        return res.status(HTTPSTATUS.OK).json({
+            message: "Logged out successfully"
+        })
     }
 )
