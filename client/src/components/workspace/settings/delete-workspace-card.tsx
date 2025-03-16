@@ -1,5 +1,7 @@
 import { ConfirmDialog } from "@/components/resuable/confirm-dialog";
+import PermissionsGuard from "@/components/resuable/permission-guard";
 import { Button } from "@/components/ui/button";
+import { Permissions } from "@/constant";
 import { useAuthContext } from "@/context/auth-provider";
 import useConfirmDialog from "@/hooks/use-confirm-dialog";
 import { toast } from "@/hooks/use-toast";
@@ -49,8 +51,8 @@ const DeleteWorkspaceCard = () => {
             Delete Workspace
           </h1>
         </div>
-
-        <div className="flex flex-col items-start justify-between py-0">
+        <PermissionsGuard showMessage requiredPermission={Permissions.DELETE_WORKSPACE}>
+          <div className="flex flex-col items-start justify-between py-0">
           <div className="flex-1 mb-2">
             <p>
               Deleting a workspace is a permanent action and cannot be undone.
@@ -66,7 +68,8 @@ const DeleteWorkspaceCard = () => {
           >
             Delete Workspace
           </Button>
-        </div>
+          </div>
+        </PermissionsGuard>
       </div>
 
       <ConfirmDialog

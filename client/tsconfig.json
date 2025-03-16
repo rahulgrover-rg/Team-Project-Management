@@ -10,6 +10,7 @@
       "@/*": ["./src/*"]
     },
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "types": ["node", "react", "react-dom", "react-router-dom"],
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true
