@@ -1,4 +1,4 @@
-import { data, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -25,12 +25,15 @@ import { useMutation } from "@tanstack/react-query";
 import { loginMutationFn } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import { Loader } from "lucide-react";
+import { useStore } from "@/store/store";
 
 const SignIn = () => {
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get("returnUrl");
+
+  const {setAccessToken} = useStore();
 
   const {mutate, isPending} = useMutation({
     mutationFn: loginMutationFn,
@@ -57,7 +60,9 @@ const SignIn = () => {
     if (isPending) return ;
     mutate(values, {
       onSuccess: (data) => {
+        const accessToken = data.access_token;
         const user = data.user;
+        setAccessToken(accessToken);
         const decodeUrl = returnUrl ? decodeURIComponent(returnUrl) : null ;
         navigate(decodeUrl || `/workspace/${user.currentWorkspace}/`);
       },
