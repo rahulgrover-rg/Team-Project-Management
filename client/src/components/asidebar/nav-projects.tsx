@@ -1,4 +1,4 @@
-import { ArrowRight, Folder, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Folder, Loader, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -23,43 +23,69 @@ import useConfirmDialog from "@/hooks/use-confirm-dialog";
 import { Button } from "../ui/button";
 import PermissionsGuard from "../resuable/permission-guard";
 import { Permissions } from "@/constant";
+import { useState } from "react";
+import useGetProjectsInWorkspaceQuery from "@/hooks/api/use-get-projects";
+import { PaginationType } from "@/types/api.type";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteProjectMutationFn } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 export function NavProjects() {
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
-
   const { onOpen } = useCreateProjectDialog();
   const { context, open, onOpenDialog, onCloseDialog } = useConfirmDialog();
-
   const workspaceId = useWorkspaceId();
-
   const { isMobile } = useSidebar();
+  const queryClient = useQueryClient();
+  const [pageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const {data,isPending,isFetching,isError} = useGetProjectsInWorkspaceQuery({
+    workspaceId,
+    pageSize,
+    pageNumber,
+  });
 
-  const projects = [
-    {
-      id: "pro-383dh",
-      name: "Design Engineering",
-      emoji: "📊",
-      url: `/workspace/${workspaceId}/project/:pro-383dh`,
-    },
-    {
-      id: "p383dh",
-      name: "Sales & Marketing",
-      emoji: "📈",
-      url: `/workspace/${workspaceId}/project/:p383dh`,
-    },
-    {
-      id: "pro-wwhe",
-      name: "Travel",
-      emoji: "✈️",
-      url: `/workspace/${workspaceId}/project/:pro-wwhe`,
-    },
-  ];
+  const {mutate , isPending:isLoading} = useMutation({
+    mutationFn: deleteProjectMutationFn,
+  })
 
-  const hasMore = true;
+  const projects = data?.projects || [] ;
+  const pagination = data?.pagination || ({} as PaginationType)
+  const hasMore = pagination?.totalPages > pageNumber;
 
-  const handleConfirm = () => {};
+  const fetchNextPage = () => {
+    if(!hasMore || isFetching) return;
+    setPageSize((prev) => prev+5);
+  }
+
+  const handleConfirm = () => {
+    if(!context) return;
+    mutate({
+      workspaceId, projectId:context?._id,
+    }, {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({
+          queryKey: ["allprojects", workspaceId],
+        })
+        toast({
+          title: "Success",
+          description: data.message,
+          variant: "success",
+        });
+        navigate(`/workspace/${workspaceId}`);
+        setTimeout(()=>onCloseDialog(), 100);
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    });
+  };
   return (
     <>
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -76,7 +102,9 @@ export function NavProjects() {
           </PermissionsGuard>
         </SidebarGroupLabel>
         <SidebarMenu className="h-[320px] scrollbar overflow-y-auto pb-2">
-          {projects?.length === 0 ? (
+          {isError ? <div>Error Occured</div> : null}
+          {isPending ? (<Loader className="w-5 h-5 animate-spin" />) : null}
+          {!isPending && projects?.length === 0 ? (
             <div className="pl-3">
               <p className="text-xs text-muted-foreground">
                 There is no projects in this Workspace yet. Projects you create
@@ -96,10 +124,10 @@ export function NavProjects() {
             </div>
           ) : (
             projects.map((item) => {
-              const projectUrl = item.url;
+              const projectUrl = `/workspace/${workspaceId}/project/${item._id}`;
 
               return (
-                <SidebarMenuItem key={item.id}>
+                <SidebarMenuItem key={item._id}>
                   <SidebarMenuButton asChild isActive={projectUrl === pathname}>
                     <Link to={projectUrl}>
                       {item.emoji}
@@ -124,14 +152,16 @@ export function NavProjects() {
                         <Folder className="text-muted-foreground" />
                         <span>View Project</span>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        disabled={false}
-                        onClick={() => onOpenDialog(item)}
-                      >
-                        <Trash2 className="text-muted-foreground" />
-                        <span>Delete Project</span>
-                      </DropdownMenuItem>
+                      <PermissionsGuard requiredPermission={Permissions.DELETE_PROJECT}>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          disabled={isLoading}
+                          onClick={() => onOpenDialog(item)}
+                        >
+                          <Trash2 className="text-muted-foreground" />
+                          <span>Delete Project</span>
+                        </DropdownMenuItem>
+                      </PermissionsGuard>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </SidebarMenuItem>
@@ -141,9 +171,9 @@ export function NavProjects() {
 
           {hasMore && (
             <SidebarMenuItem>
-              <SidebarMenuButton className="text-sidebar-foreground/70">
+              <SidebarMenuButton className="text-sidebar-foreground/70" disabled={isFetching} onClick={fetchNextPage}>
                 <MoreHorizontal className="text-sidebar-foreground/70" />
-                <span>More</span>
+                <span>{isFetching ? "Loading..." :  "More"}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
@@ -152,7 +182,7 @@ export function NavProjects() {
 
       <ConfirmDialog
         isOpen={open}
-        isLoading={false}
+        isLoading={isLoading}
         onClose={onCloseDialog}
         onConfirm={handleConfirm}
         title="Delete Project"
