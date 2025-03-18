@@ -11,7 +11,7 @@ type SignOptsAndSecret = SignOptions & {
 };
 
 const defaults: SignOptions = {
-    audience: ["user"],
+    audience: "user",
 };
 
 export const accessTokenSignOptions: SignOptsAndSecret = {
@@ -24,8 +24,11 @@ export const signJwtToken = (
     options?: SignOptsAndSecret,
 )=>{
     const {secret, ...opts} = options || accessTokenSignOptions;
-    return jwt.sign(payload, secret, {
+    console.log("JWT Payload:", JSON.stringify(payload)); 
+    const token = jwt.sign(payload, secret, {
         ...defaults,
         ...opts,
     });
+    console.log("Generated JWT Token:", token);
+    return token;
 }

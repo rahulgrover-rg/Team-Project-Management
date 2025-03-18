@@ -62,13 +62,17 @@ interface JwtPayload {
 }
 
 const options: StrategyOptions = {
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    jwtFromRequest: (req) => {
+        const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+        return token;
+    },
     secretOrKey: config.JWT_SECRET,
-    audience: ["user"],
+    audience: "user",
     algorithms: ["HS256"],
 };
 passport.use(
     new JwtStrategy(options, async(payload: JwtPayload, done)=> {
+        console.log(payload);
         try {
             const user = await findUserByIdService(payload.userId);
             if(!user) {

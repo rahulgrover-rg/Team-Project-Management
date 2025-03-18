@@ -13,7 +13,7 @@ export interface WorkspaceDocument extends Document {
 const workspaceSchema = new Schema<WorkspaceDocument>({
     name: {
         type: String,
-        reuired: true,
+        required: true,
         trim: true,
     },
     description: {

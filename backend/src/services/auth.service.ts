@@ -4,8 +4,8 @@ import { Roles } from "../enums/role.enum";
 import AccountModel from "../models/account.model";
 import MemberModel from "../models/member.model";
 import RoleModel from "../models/role-permission.model";
-import UserModel from "../models/user.model";
 import WorkspaceModel from "../models/workspace.model";
+import UserModel from "../models/user.model";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "../utils/appError";
 
 export const loginOrCreateAccountService = async(data: {
@@ -79,6 +79,7 @@ export const registerUserService = async(body : {
 }) => {
     const {email,name,password} = body;
     const session = await mongoose.startSession();
+    session.startTransaction();
     try {
         const existingUser = await UserModel.findOne({email}).session(session);
         if(existingUser) {

@@ -38,6 +38,11 @@ export const getWorkspaceByIdController = asyncHandler(
         const userId = req.user?._id;
         await getMemberRoleInWorkspace(userId,workspaceId);
         const {workspace} = await getWorkspaceByIdService(workspaceId) ;
+
+        return res.status(HTTPSTATUS.OK).json({
+            message: "Workspace fetched successfully",
+            workspace,
+        });
     }
 )
 
