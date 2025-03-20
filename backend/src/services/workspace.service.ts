@@ -93,7 +93,7 @@ export const getWorkspaceMembersService = async(workspaceId: string) => {
 
 export const getWorkspaceAnalyticsService = async(workspaceId: string) => {
     const currentDate = new Date();
-    const totalTasks = await TaskModel.find({
+    const totalTasks = await TaskModel.countDocuments({
         workspace: workspaceId,
     });
 
@@ -167,8 +167,8 @@ export const deleteWorkspaceService = async(workspaceId:string,
         if(!workspace) {
             throw new NotFoundException("Workspace Not Found"); 
         }
-
-        if(workspace.owner.toString() !== userId) {
+        
+        if(!workspace.owner.equals(userId)) {
             throw new BadRequestException("You are not authorized to delete this workspace");
         }
 

@@ -128,6 +128,7 @@ const DataTableFilterToolbar: FC<DataTableFilterToolbarProps> = ({
             <AvatarImage src={member.userId.profilePicture || ""} alt={name}/>
             <AvatarFallback className={avatarColor}>{initials}</AvatarFallback>
           </Avatar>
+          <span>{name}</span>
         </div>
       ),
       value: member.userId._id,

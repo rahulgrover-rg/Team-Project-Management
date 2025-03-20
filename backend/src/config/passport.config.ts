@@ -15,20 +15,20 @@ passport.use(new GoogleStrategy({
     callbackURL: config.GOOGLE_CALLBACK_URL,
     scope: ["profile", "email"],
     passReqToCallback: true,
-}, async (req: Request, accessToken, refreshToken,profile,done) => {
+}, async (req: Request,accessToken,refreshToken,profile,done) => {
     try {
         const {email,sub:googleId, picture} = profile._json;
         if(!googleId) {
             throw new NotFoundException("Google ID(sub) is missing") ;
         }
-        console.log(googleId,"googleId");
+        
         const {user} = await loginOrCreateAccountService({
             provider: ProviderEnum.GOOGLE,
             displayName: profile.displayName,
             providerId: googleId,
             picture: picture,
             email: email,
-        }) ;
+        });
 
         const jwt = signJwtToken({userId: user._id});
         req.jwt = jwt;
@@ -72,7 +72,6 @@ const options: StrategyOptions = {
 };
 passport.use(
     new JwtStrategy(options, async(payload: JwtPayload, done)=> {
-        console.log(payload);
         try {
             const user = await findUserByIdService(payload.userId);
             if(!user) {

@@ -20,7 +20,7 @@ const withPermission = (
       }
     },[user,hasPermission,workspaceId,navigate]) ;
 
-    if(!isLoading) {
+    if(isLoading) {
       return <div>Loading...</div>
     }
 

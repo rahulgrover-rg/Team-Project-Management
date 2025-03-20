@@ -262,6 +262,20 @@ export type AllTaskPayloadType = {
   pageSize?: number | null;
 };
 
+export type EditTaskPayloadType = {
+  taskId: string;
+  projectId: string;
+  workspaceId: string;
+  data: {
+    title: string;
+    description?: string;
+    status: string;
+    priority: string;
+    assignedTo: string;
+    dueDate: string;
+  };
+}
+
 export type AllTaskResponseType = {
   message: string;
   tasks: TaskType[];

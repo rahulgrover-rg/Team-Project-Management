@@ -12,7 +12,7 @@ const WorkspaceAnalytics = () => {
     enabled: !!workspaceId,
   })
   const analytics = data?.analytics;
-
+  
   return (
     <div className="grid gap-4 md:gap-5 lg:grid-cols-2 xl:grid-cols-3">
         <AnalyticsCard

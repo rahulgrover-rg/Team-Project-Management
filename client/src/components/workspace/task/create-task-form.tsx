@@ -79,7 +79,8 @@ export default function CreateTaskForm(props: {
             <AvatarImage src={member.userId.profilePicture || ""} alt={name}/>
             <AvatarFallback className={avatarColor}>{initials}</AvatarFallback>
           </Avatar>
-        </div>
+          <span>{name}</span>
+        </div>      
       ),
       value: member.userId._id,
     };
@@ -129,7 +130,7 @@ export default function CreateTaskForm(props: {
   const priorityOptions = transformOptions(taskPriorityList);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if(!isPending) return;
+    if(isPending) return;
     const payload = {
       workspaceId,
       projectId: values.projectId,
@@ -425,7 +426,7 @@ export default function CreateTaskForm(props: {
             </div>
 
             <Button
-              className="flex place-self-end  h-[40px] text-white font-semibold"
+              className="flex place-self-end  h-[40px] text-white font-semibold disabled:text-gray-800"
               type="submit" disabled={isPending}
             >
               {isPending && <Loader className="animate-spin" />}

@@ -17,29 +17,29 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useWorkspaceId from "@/hooks/use-workspace-id";
 import { deleteTaskMutationFn } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import EditTaskDialog from "@/components/workspace/task/edit-task-dialog";
 
 interface DataTableRowActionsProps {
   row: Row<TaskType>;
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
-  const [openDeleteDialog, setOpenDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
   const queryClient = useQueryClient();
   const workspaceId = useWorkspaceId();
 
-  const { mutate, isPending } = useMutation({
+  const { mutate: deleteMutate, isPending: isDeleting } = useMutation({
     mutationFn: deleteTaskMutationFn,
   });
 
   const taskId = row.original._id as string;
   const taskCode = row.original.taskCode;
 
-  const handleConfirm = () => {
-    mutate(
-      {
-        workspaceId,
-        taskId,
-      },
+  // ✅ Handle task deletion
+  const handleDeleteConfirm = () => {
+    deleteMutate(
+      { workspaceId, taskId },
       {
         onSuccess: (data) => {
           queryClient.invalidateQueries({
@@ -47,20 +47,33 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           });
           toast({
             title: "Success",
-            description: data.message,
+            description: data?.message || "Task deleted successfully.",
             variant: "success",
           });
-          setTimeout(() => setOpenDialog(false), 100);
+          setOpenDeleteDialog(false);
         },
         onError: (error) => {
           toast({
             title: "Error",
-            description: error.message,
+            description: error?.message || "Failed to delete task.",
             variant: "destructive",
           });
         },
       }
     );
+  };
+
+  // ✅ Handle task edit
+  const handleEditConfirm = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["all-tasks", workspaceId],
+    });
+    toast({
+      title: "Success",
+      description: "Task updated successfully.",
+      variant: "success",
+    });
+    setOpenEditDialog(false);
   };
 
   return (
@@ -75,14 +88,22 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
+
         <DropdownMenuContent align="end" className="w-[160px]">
-          <DropdownMenuItem className="cursor-pointer">
+          {/* ✅ Edit Task */}
+          <DropdownMenuItem
+            className={`cursor-pointer ${taskId}`}
+            onClick={() => setOpenEditDialog(true)}
+          >
             Edit Task
           </DropdownMenuItem>
+
           <DropdownMenuSeparator />
+
+
           <DropdownMenuItem
             className={`!text-destructive cursor-pointer ${taskId}`}
-            onClick={() => setOpenDialog(true)}
+            onClick={() => setOpenDeleteDialog(true)}
           >
             Delete Task
             <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
@@ -90,13 +111,22 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
         </DropdownMenuContent>
       </DropdownMenu>
 
+    
+      <EditTaskDialog
+        isOpen={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        task={row.original}
+        onSuccess={handleEditConfirm}
+      />
+
+
       <ConfirmDialog
         isOpen={openDeleteDialog}
-        isLoading={isPending}
-        onClose={() => setOpenDialog(false)}
-        onConfirm={handleConfirm}
+        isLoading={isDeleting}
+        onClose={() => setOpenDeleteDialog(false)}
+        onConfirm={handleDeleteConfirm}
         title="Delete Task"
-        description={`Are you sure you want to delete ${taskCode}`}
+        description={`Are you sure you want to delete "${taskCode}"?`}
         confirmText="Delete"
         cancelText="Cancel"
       />
